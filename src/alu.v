@@ -1,12 +1,9 @@
-// ============================================================
-// 8-bit ALU — Verilog HDL Implementation
-// Supports: Addition, Subtraction, AND, OR, Shift Left, Shift Right, Pass A
-// ============================================================
+// 8-bit ALU - Verilog HDL
+// Operations: ADD, SUB, AND, OR, SHL, SHR, PASS B
 
-// -------------------------------------------------------
-// B Input Multiplexer
-// Selects between B, ~B, or 0 based on bsel control signal
-// -------------------------------------------------------
+// =====================
+// Multiplexer B
+// =====================
 module mux_B(
     input  wire [7:0] b,
     input  wire [1:0] bsel,
@@ -25,32 +22,30 @@ module mux_B(
     end
 endmodule
 
-// -------------------------------------------------------
+// =====================
 // 8-bit Adder
-// Computes A + X + Cin, with carry-out and overflow flags
-// -------------------------------------------------------
+// =====================
 module ADD(
     input  wire [7:0] a,
     input  wire [7:0] x,
     input  wire       cin,
-    output reg  [7:0] cout,
+    output reg  [7:0] sum,
     output reg        co,
     output reg        o
 );
     reg [8:0] temp;
 
     always @(*) begin
-        temp = a + x + cin;
-        cout = temp[7:0];
+        temp = {1'b0, a} + {1'b0, x} + {8'b0, cin};
+        sum  = temp[7:0];
         co   = temp[8];
-        o    = (a[7] == x[7]) && (cout[7] != a[7]);
+        o    = (a[7] == x[7]) && (sum[7] != a[7]);
     end
 endmodule
 
-// -------------------------------------------------------
-// Logical Block
-// Performs AND or OR based on lop control signal
-// -------------------------------------------------------
+// =====================
+// Logical Unit
+// =====================
 module Logic(
     input  wire [7:0] a,
     input  wire [7:0] x,
@@ -66,11 +61,9 @@ module Logic(
     end
 endmodule
 
-// -------------------------------------------------------
-// Shifter Block
-// Performs left or right shift with serial input (si)
-// Outputs shift-out bit (so)
-// -------------------------------------------------------
+// =====================
+// Shifter
+// =====================
 module Shift(
     input  wire [7:0] a,
     input  wire       si,
@@ -81,11 +74,11 @@ module Shift(
     always @(*) begin
         case (sop)
             1'b0: begin
-                shifter = {a[6:0], si};   // Left shift
+                shifter = {a[6:0], si};
                 so      = a[7];
             end
             1'b1: begin
-                shifter = {si, a[7:1]};   // Right shift
+                shifter = {si, a[7:1]};
                 so      = a[0];
             end
             default: begin
@@ -96,11 +89,10 @@ module Shift(
     end
 endmodule
 
-// -------------------------------------------------------
-// Control Logic
-// Decodes 3-bit opcode into datapath control signals
-// OP: 000=ADD, 001=SUB, 011=AND, 100=OR, 101=SHL, 110=SHR, 111=PASS A
-// -------------------------------------------------------
+// =====================
+// Control Unit
+// OP: 000=ADD 001=SUB 011=AND 100=OR 101=SHL 110=SHR 111=PASS B
+// =====================
 module Control(
     input  wire [2:0] OP,
     output reg  [1:0] bsel,
@@ -110,7 +102,6 @@ module Control(
     output reg  [1:0] osel
 );
     always @(*) begin
-        // Defaults
         bsel = 2'b00;
         cin  = 1'b0;
         lop  = 1'b0;
@@ -118,24 +109,23 @@ module Control(
         osel = 2'b00;
 
         case (OP)
-            3'b000: begin bsel = 2'b00; cin = 1'b0; osel = 2'b00; end  // ADD
-            3'b001: begin bsel = 2'b01; cin = 1'b1; osel = 2'b00; end  // SUB
-            3'b011: begin bsel = 2'b00; lop = 1'b0; osel = 2'b01; end  // AND
-            3'b100: begin bsel = 2'b00; lop = 1'b1; osel = 2'b01; end  // OR
-            3'b101: begin sop  = 1'b0;              osel = 2'b10; end  // SHL
-            3'b110: begin sop  = 1'b1;              osel = 2'b10; end  // SHR
-            3'b111: begin bsel = 2'b10; cin = 1'b0; osel = 2'b00; end  // PASS A
-            default: begin end
+            3'b000: begin bsel = 2'b00; cin = 1'b0; osel = 2'b00; end
+            3'b001: begin bsel = 2'b01; cin = 1'b1; osel = 2'b00; end
+            3'b011: begin lop  = 1'b0;              osel = 2'b01; end
+            3'b100: begin lop  = 1'b1;              osel = 2'b01; end
+            3'b101: begin sop  = 1'b0;              osel = 2'b10; end
+            3'b110: begin sop  = 1'b1;              osel = 2'b10; end
+            3'b111: begin bsel = 2'b10; cin = 1'b0; osel = 2'b00; end
+            default: osel = 2'b00;
         endcase
     end
 endmodule
 
-// -------------------------------------------------------
+// =====================
 // Output Multiplexer
-// Selects final output from adder, logic, or shifter
-// -------------------------------------------------------
+// =====================
 module mux_D(
-    input  wire [7:0] cout,
+    input  wire [7:0] sum,
     input  wire [7:0] out,
     input  wire [7:0] shifter,
     input  wire [1:0] osel,
@@ -143,7 +133,7 @@ module mux_D(
 );
     always @(*) begin
         case (osel)
-            2'b00:   Y = cout;
+            2'b00:   Y = sum;
             2'b01:   Y = out;
             2'b10:   Y = shifter;
             default: Y = 8'b00000000;
@@ -151,10 +141,9 @@ module mux_D(
     end
 endmodule
 
-// -------------------------------------------------------
-// ALU Top-Level Datapath
-// Connects all functional blocks
-// -------------------------------------------------------
+// =====================
+// ALU Top-Level
+// =====================
 module alu_path(
     input  wire [7:0] a,
     input  wire [7:0] b,
@@ -167,7 +156,7 @@ module alu_path(
     output wire       so
 );
     wire [7:0] x;
-    wire [7:0] cout;
+    wire [7:0] sum;
     wire [7:0] out;
     wire [7:0] shifter;
     wire [1:0] bsel;
@@ -176,12 +165,13 @@ module alu_path(
     wire       lop;
     wire       sop;
 
-    mux_B   B1 (b,    bsel, x);
-    Control C1 (OP,   bsel, cin, lop, sop, osel);
-    ADD     A1 (a,    x,    cin, cout, co, o);
-    Logic   L1 (a,    x,    lop, out);
-    Shift   S1 (a,    si,   sop, shifter, so);
-    mux_D   D1 (cout, out,  shifter, osel, Y);
+    mux_B   B1 (b,   bsel, x);
+    Control C1 (OP,  bsel, cin, lop, sop, osel);
+    ADD     A1 (a,   x,   cin,  sum, co,  o);
+    Logic   L1 (a,   x,   lop,  out);
+    Shift   S1 (a,   si,  sop,  shifter, so);
+    mux_D   D1 (sum, out, shifter, osel, Y);
 
     assign Z = ~Y;
+
 endmodule
