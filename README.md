@@ -72,7 +72,7 @@ Tested using **ModelSim**. To simulate:
 
 ---
 
-## Key Concepts Demonstrated
+## Key Concepts
 
 - Modular RTL design with clearly separated functional blocks
 - Datapath and control unit architecture
