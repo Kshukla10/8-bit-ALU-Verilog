@@ -1,0 +1,76 @@
+`timescale 1ns/1ps
+// ============================================================
+// Testbench — 8-bit ALU
+// Tests all supported operations across multiple input cases
+// ============================================================
+module alu_test;
+
+    reg  [7:0] a;
+    reg  [7:0] b;
+    reg  [2:0] OP;
+    reg        si;
+    wire [7:0] Y;
+    wire [7:0] Z;
+    wire       co;
+    wire       o;
+    wire       so;
+
+    // Instantiate ALU
+    alu_path DUT (
+        .a  (a),
+        .b  (b),
+        .OP (OP),
+        .si (si),
+        .Y  (Y),
+        .Z  (Z),
+        .co (co),
+        .o  (o),
+        .so (so)
+    );
+
+    initial begin
+        $display("========================================");
+        $display("         8-bit ALU Simulation           ");
+        $display("========================================");
+        $display("Time  OP    A         B         Y         Z         co o  so");
+        $display("========================================");
+
+        $monitor("T=%0t OP=%b a=%b b=%b si=%b | Y=%b Z=%b co=%b o=%b so=%b",
+                  $time, OP, a, b, si, Y, Z, co, o, so);
+
+        // ---------------------------
+        // Test Case 1: a=0x0F, b=0x03
+        // ---------------------------
+        a = 8'b00001111;
+        b = 8'b00000011;
+        si = 0;
+
+        OP = 3'b000; #10;   // ADD:         0x0F + 0x03 = 0x12
+        OP = 3'b001; #10;   // SUB:         0x0F - 0x03 = 0x0C
+        OP = 3'b011; #10;   // AND:         0x0F & 0x03 = 0x03
+        OP = 3'b100; #10;   // OR:          0x0F | 0x03 = 0x0F
+
+        si = 1;
+        OP = 3'b101; #10;   // SHIFT LEFT:  si=1 shifted in
+        si = 0;
+        OP = 3'b110; #10;   // SHIFT RIGHT: si=0 shifted in
+        OP = 3'b111; #10;   // PASS A:      Y = A
+
+        // ---------------------------
+        // Test Case 2: a=0xAA, b=0x55
+        // ---------------------------
+        a = 8'b10101010;
+        b = 8'b01010101;
+        si = 1;
+
+        OP = 3'b000; #10;   // ADD:         0xAA + 0x55 = 0xFF
+        OP = 3'b011; #10;   // AND:         0xAA & 0x55 = 0x00
+        OP = 3'b101; #10;   // SHIFT LEFT:  si=1 shifted in
+
+        $display("========================================");
+        $display("         Simulation Complete            ");
+        $display("========================================");
+        $stop;
+    end
+
+endmodule
