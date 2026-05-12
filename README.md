@@ -72,6 +72,15 @@ Tested using **ModelSim**. To simulate:
 
 ---
 
+## Results
+<img width="886" height="352" alt="Screenshot 2026-05-12 163107" src="https://github.com/user-attachments/assets/3cdd5dbe-3b89-4d4c-ac3f-e8952a3bd4d0" />
+<img width="1750" height="600" alt="image" src="https://github.com/user-attachments/assets/362efb2f-c01f-4184-9784-5b31a86b2aa7" />
+
+
+
+
+---
+
 ## Key Concepts
 
 - Modular RTL design with clearly separated functional blocks
