@@ -1,7 +1,6 @@
 `timescale 1ns/1ps
 // ============================================================
 // Testbench — 8-bit ALU
-// Tests all supported operations across multiple input cases
 // ============================================================
 module alu_test;
 
@@ -15,7 +14,7 @@ module alu_test;
     wire       o;
     wire       so;
 
-    // Instantiate ALU
+    // Instantiate ALU using named port connections
     alu_path DUT (
         .a  (a),
         .b  (b),
@@ -29,47 +28,46 @@ module alu_test;
     );
 
     initial begin
-        $display("========================================");
-        $display("         8-bit ALU Simulation           ");
-        $display("========================================");
-        $display("Time  OP    A         B         Y         Z         co o  so");
-        $display("========================================");
-
-        $monitor("T=%0t OP=%b a=%b b=%b si=%b | Y=%b Z=%b co=%b o=%b so=%b",
+        $display("============================================");
+        $display("           8-bit ALU Simulation             ");
+        $display("============================================");
+        $monitor("T=%0t | OP=%b | A=%b B=%b si=%b | Y=%b Z=%b co=%b o=%b so=%b",
                   $time, OP, a, b, si, Y, Z, co, o, so);
 
         // ---------------------------
         // Test Case 1: a=0x0F, b=0x03
         // ---------------------------
-        a = 8'b00001111;
-        b = 8'b00000011;
-        si = 0;
+        a = 8'h0F; b = 8'h03; si = 1'b0;
 
-        OP = 3'b000; #10;   // ADD:         0x0F + 0x03 = 0x12
-        OP = 3'b001; #10;   // SUB:         0x0F - 0x03 = 0x0C
-        OP = 3'b011; #10;   // AND:         0x0F & 0x03 = 0x03
-        OP = 3'b100; #10;   // OR:          0x0F | 0x03 = 0x0F
+        OP = 3'b000; #10; // ADD:        0x0F + 0x03 = 0x12
+        OP = 3'b001; #10; // SUB:        0x0F - 0x03 = 0x0C
+        OP = 3'b011; #10; // AND:        0x0F & 0x03 = 0x03
+        OP = 3'b100; #10; // OR:         0x0F | 0x03 = 0x0F
 
-        si = 1;
-        OP = 3'b101; #10;   // SHIFT LEFT:  si=1 shifted in
-        si = 0;
-        OP = 3'b110; #10;   // SHIFT RIGHT: si=0 shifted in
-        OP = 3'b111; #10;   // PASS A:      Y = A
+        si = 1'b1;
+        OP = 3'b101; #10; // SHL:        shift left,  si=1
+        si = 1'b0;
+        OP = 3'b110; #10; // SHR:        shift right, si=0
+        OP = 3'b111; #10; // PASS B:     Y = B = 0x03
 
         // ---------------------------
         // Test Case 2: a=0xAA, b=0x55
         // ---------------------------
-        a = 8'b10101010;
-        b = 8'b01010101;
-        si = 1;
+        a = 8'hAA; b = 8'h55; si = 1'b1;
 
-        OP = 3'b000; #10;   // ADD:         0xAA + 0x55 = 0xFF
-        OP = 3'b011; #10;   // AND:         0xAA & 0x55 = 0x00
-        OP = 3'b101; #10;   // SHIFT LEFT:  si=1 shifted in
+        OP = 3'b000; #10; // ADD:        0xAA + 0x55 = 0xFF
+        OP = 3'b011; #10; // AND:        0xAA & 0x55 = 0x00
+        OP = 3'b101; #10; // SHL:        shift left,  si=1
 
-        $display("========================================");
-        $display("         Simulation Complete            ");
-        $display("========================================");
+        // ---------------------------
+        // Test Case 3: overflow check
+        // ---------------------------
+        a = 8'h7F; b = 8'h01; si = 1'b0;
+        OP = 3'b000; #10; // ADD: 0x7F + 0x01 = 0x80, overflow expected
+
+        $display("============================================");
+        $display("           Simulation Complete              ");
+        $display("============================================");
         $stop;
     end
 
